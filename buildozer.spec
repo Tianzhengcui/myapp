@@ -5,7 +5,7 @@ package.domain = org.test
 version = 0.1
 source.dir = .
 source.include_exts = py
-requirements = python==3.10.11,kivy==2.1.0
+requirements = python==3.10.11,kivy==2.1.0,pyjnius==1.4.2
 orientation = portrait
 fullscreen = 0
 
