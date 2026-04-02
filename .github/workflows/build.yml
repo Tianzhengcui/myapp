@@ -184,6 +184,14 @@ jobs:
       env:
         JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
+    - name: Find APK files
+      run: |
+        echo "=== Searching for APK files ==="
+        find . -name "*.apk" -type f 2>/dev/null | head -20
+        echo ""
+        echo "=== Buildozer output directory structure ==="
+        ls -la .buildozer/android/platform/build-*/build/outputs/ 2>/dev/null || echo "Not found"
+
     - name: Upload APK
       if: success()
       uses: actions/upload-artifact@v4
@@ -191,7 +199,8 @@ jobs:
         name: apk
         path: |
           **/*.apk
-        retention-days: 5
+          .buildozer/android/platform/build-*/build/outputs/apk/**/*.apk
+        retention-days: 30
 
     - name: Upload build logs on failure
       if: failure()
