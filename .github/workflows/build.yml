@@ -19,7 +19,8 @@ jobs:
       run: |
         rm -rf ~/.buildozer/android/platform/build-tools* || true
         rm -rf ~/.gradle/caches/build-cache-* || true
-        rm -rf ~/.buildozer/android/platform/android-sdk/ndk || true
+        # Preserve NDK cache to reduce network requests and avoid 404 errors on re-download
+        # rm -rf ~/.buildozer/android/platform/android-sdk/ndk || true
         rm -rf ~/.buildozer/android/platform/android-ndk* || true
         rm -rf ~/.buildozer/android/platform/android-sdk/tools || true
         rm -rf ~/.buildozer/android/platform/android-sdk/cmdline-tools || true
