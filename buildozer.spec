@@ -2,6 +2,8 @@
 title = MyApp
 package.name = myapp
 package.domain = org.example
+source.dir = .
+version = 1.0.0
 
 [buildozer]
 # Log level (0 = error, 1 = info, 2 = debug)
