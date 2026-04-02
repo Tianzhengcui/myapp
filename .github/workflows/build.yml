@@ -70,19 +70,20 @@ jobs:
         unzip -q commandlinetools-linux-11076708_latest.zip
         rm commandlinetools-linux-11076708_latest.zip
         
-        # Move to tools directory (buildozer expects this structure)
-        mv cmdline-tools tools
+        # Create the correct directory structure for sdkmanager
+        mkdir -p cmdline-tools/latest
+        mv cmdline-tools/* cmdline-tools/latest/ 2>/dev/null || true
         
         # Create licenses directory and accept licenses
         mkdir -p $ANDROID_SDK_ROOT/licenses
         echo -e "\n8933bad161af4d15e21e9cd5bde69f1d4faf61b\n" > $ANDROID_SDK_ROOT/licenses/android-sdk-license
         echo -e "\n504667f4c0de7973335447fc81eff3b0dfa5d37\n" > $ANDROID_SDK_ROOT/licenses/android-sdk-preview-license
         
-        # Install SDK packages
+        # Install SDK packages with explicit SDK root
         echo "Installing SDK packages..."
-        yes | $ANDROID_SDK_ROOT/tools/bin/sdkmanager "platforms;android-34" 2>&1 | tail -5 || true
-        yes | $ANDROID_SDK_ROOT/tools/bin/sdkmanager "build-tools;35.0.0" 2>&1 | tail -5 || true
-        yes | $ANDROID_SDK_ROOT/tools/bin/sdkmanager "platform-tools" 2>&1 | tail -5 || true
+        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platforms;android-34" 2>&1 | tail -5 || true
+        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "build-tools;35.0.0" 2>&1 | tail -5 || true
+        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" 2>&1 | tail -5 || true
       timeout-minutes: 60
 
     - name: Pre-download Android NDK
