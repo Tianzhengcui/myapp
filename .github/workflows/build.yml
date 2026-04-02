@@ -79,17 +79,6 @@ jobs:
           exit 1
         fi
         
-        # Copy to tools/bin for buildozer compatibility (CRITICAL FIX)
-        mkdir -p tools/bin
-        cp cmdline-tools/latest/bin/sdkmanager tools/bin/sdkmanager
-        chmod +x tools/bin/sdkmanager
-        
-        # Verify copy was successful
-        if [ ! -f "tools/bin/sdkmanager" ]; then
-          echo "ERROR: sdkmanager copy failed"
-          exit 1
-        fi
-        
         # Create licenses directory and accept licenses
         mkdir -p $ANDROID_SDK_ROOT/licenses
         echo -e "\n8933bad161af4d15e21e9cd5bde69f1d4faf61b\n" > $ANDROID_SDK_ROOT/licenses/android-sdk-license
@@ -97,10 +86,12 @@ jobs:
         
         # Install SDK packages
         echo "Installing SDK packages..."
-        $ANDROID_SDK_ROOT/tools/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platforms;android-34" 2>&1 | tail -5 || true
-        $ANDROID_SDK_ROOT/tools/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "build-tools;35.0.0" 2>&1 | tail -5 || true
-        $ANDROID_SDK_ROOT/tools/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" 2>&1 | tail -5 || true
+        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platforms;android-34" 2>&1 | tail -5 || true
+        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "build-tools;35.0.0" 2>&1 | tail -5 || true
+        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" 2>&1 | tail -5 || true
       timeout-minutes: 60
+      env:
+        JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
     - name: Pre-download Android NDK
       run: |
