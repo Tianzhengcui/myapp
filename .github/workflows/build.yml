@@ -38,13 +38,13 @@ jobs:
         restore-keys: |
           gradle-${{ runner.os }}-
 
-    - name: Cache Android NDK
+    - name: Cache Android SDK
       uses: actions/cache@v3
       with:
-        path: ~/.buildozer/android/platform/android-sdk/ndk
-        key: android-ndk-r27b-${{ runner.os }}
+        path: ~/.buildozer/android/platform/android-sdk
+        key: android-sdk-${{ runner.os }}-api34
         restore-keys: |
-          android-ndk-r27b-
+          android-sdk-${{ runner.os }}-
 
     - name: Install dependencies
       run: |
@@ -57,6 +57,34 @@ jobs:
           cmake libffi-dev libssl-dev ca-certificates wget
         pip install --upgrade pip setuptools wheel
         pip install --upgrade buildozer cython
+
+    - name: Setup Android SDK
+      run: |
+        export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
+        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+        
+        # Download Android SDK Command-line Tools
+        echo "Downloading Android SDK Command-line Tools..."
+        cd $ANDROID_SDK_ROOT/cmdline-tools
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+        unzip -q commandlinetools-linux-11076708_latest.zip
+        rm commandlinetools-linux-11076708_latest.zip
+        
+        # Create tools directory structure
+        mkdir -p latest
+        mv cmdline-tools/* latest/ 2>/dev/null || true
+        
+        # Create licenses directory and accept licenses
+        mkdir -p $ANDROID_SDK_ROOT/licenses
+        echo -e "\n8933bad161af4d15e21e9cd5bde69f1d4faf61b\n" > $ANDROID_SDK_ROOT/licenses/android-sdk-license
+        echo -e "\n504667f4c0de7973335447fc81eff3b0dfa5d37\n" > $ANDROID_SDK_ROOT/licenses/android-sdk-preview-license
+        
+        # Install SDK packages
+        echo "Installing SDK packages..."
+        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" 2>&1 | tail -5 || true
+        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "build-tools;35.0.0" 2>&1 | tail -5 || true
+        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platform-tools" 2>&1 | tail -5 || true
+      timeout-minutes: 60
 
     - name: Pre-download Android NDK
       run: |
@@ -97,7 +125,7 @@ jobs:
           echo "NDK found in cache, skipping download"
         fi
       timeout-minutes: 60
-
+    
     - name: Set Buildozer config
       run: |
         mkdir -p ~/.buildozer/android/platform
