@@ -11,7 +11,8 @@ fullscreen = 0
 
 android.api = 34
 android.minapi = 21
-android.ndk = 27b  # Updated from 25b
+android.ndk = 27b
+android.ndk_path = ~/.buildozer/android/platform/android-sdk/ndk/27.0.12077973
 
 [buildozer]
 log_level = 2
@@ -23,5 +24,6 @@ android.permissions = INTERNET
 [app:android]
 android.api = 34
 android.minapi = 21
-android.ndk = 27b  # Updated from 25b
+android.ndk = 27b
+android.ndk_path = ~/.buildozer/android/platform/android-sdk/ndk/27.0.12077973
 android.accept_sdk_license = True
