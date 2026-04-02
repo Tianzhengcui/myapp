@@ -61,18 +61,17 @@ jobs:
     - name: Setup Android SDK
       run: |
         export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
-        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+        mkdir -p $ANDROID_SDK_ROOT
         
         # Download Android SDK Command-line Tools
         echo "Downloading Android SDK Command-line Tools..."
-        cd $ANDROID_SDK_ROOT/cmdline-tools
+        cd $ANDROID_SDK_ROOT
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
         unzip -q commandlinetools-linux-11076708_latest.zip
         rm commandlinetools-linux-11076708_latest.zip
         
-        # Create tools directory structure
-        mkdir -p latest
-        mv cmdline-tools/* latest/ 2>/dev/null || true
+        # Move to tools directory (buildozer expects this structure)
+        mv cmdline-tools tools
         
         # Create licenses directory and accept licenses
         mkdir -p $ANDROID_SDK_ROOT/licenses
@@ -81,9 +80,9 @@ jobs:
         
         # Install SDK packages
         echo "Installing SDK packages..."
-        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" 2>&1 | tail -5 || true
-        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "build-tools;35.0.0" 2>&1 | tail -5 || true
-        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platform-tools" 2>&1 | tail -5 || true
+        yes | $ANDROID_SDK_ROOT/tools/bin/sdkmanager "platforms;android-34" 2>&1 | tail -5 || true
+        yes | $ANDROID_SDK_ROOT/tools/bin/sdkmanager "build-tools;35.0.0" 2>&1 | tail -5 || true
+        yes | $ANDROID_SDK_ROOT/tools/bin/sdkmanager "platform-tools" 2>&1 | tail -5 || true
       timeout-minutes: 60
 
     - name: Pre-download Android NDK
@@ -186,4 +185,3 @@ jobs:
         name: buildozer-logs
         path: .buildozer/android/platform/build-*/build/outputs/logs/
         retention-days: 3
-
