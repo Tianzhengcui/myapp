@@ -1,9 +1,17 @@
 [app]
 title = MyApp
 package.name = myapp
-package.domain = org.example
+package.domain = org.test
+version = 0.1
 source.dir = .
-version = 1.0.0
+source.include_exts = py
+requirements=python==3.10.11,kivy==2.1.0,pyjnius==1.5.1
+orientation = portrait
+fullscreen = 0
+
+android.api = 31
+android.miniapi = 21
+android.ndk = 25b
 
 [buildozer]
 # Log level (0 = error, 1 = info, 2 = debug)
