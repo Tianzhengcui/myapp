@@ -19,6 +19,8 @@ jobs:
       run: |
         rm -rf ~/.buildozer/android/platform/build-tools* || true
         rm -rf ~/.gradle/caches/build-cache-* || true
+        rm -rf ~/.buildozer/android/platform/android-sdk/ndk || true
+        rm -rf ~/.buildozer/android/platform/android-ndk* || true
     
     - name: Cache Buildozer
       uses: actions/cache@v3
@@ -36,6 +38,14 @@ jobs:
         restore-keys: |
           gradle-${{ runner.os }}-
 
+    - name: Cache Android NDK
+      uses: actions/cache@v3
+      with:
+        path: ~/.buildozer/android/platform/android-sdk/ndk
+        key: android-ndk-r27b-${{ runner.os }}
+        restore-keys: |
+          android-ndk-r27b-
+
     - name: Install dependencies
       run: |
         sudo apt-get update
@@ -44,9 +54,49 @@ jobs:
           autoconf automake libtool pkg-config \
           libltdl-dev m4 \
           zlib1g-dev libncurses5-dev libncursesw5-dev \
-          cmake libffi-dev libssl-dev ca-certificates
+          cmake libffi-dev libssl-dev ca-certificates wget
         pip install --upgrade pip setuptools wheel
-        pip install buildozer cython
+        pip install --upgrade buildozer cython
+
+    - name: Pre-download Android NDK
+      run: |
+        export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
+        mkdir -p $ANDROID_SDK_ROOT/ndk
+        
+        # Check if NDK is already cached
+        if [ ! -d "$ANDROID_SDK_ROOT/ndk/27.0.12077973" ]; then
+          echo "NDK not found in cache, downloading..."
+          cd $ANDROID_SDK_ROOT/ndk
+          
+          # Download with retry logic
+          for i in {1..3}; do
+            echo "Download attempt $i/3..."
+            if wget -q --timeout=30 https://dl.google.com/android/repository/android-ndk-r27b-linux.zip; then
+              echo "Download successful"
+              break
+            else
+              echo "Download failed, retrying..."
+              rm -f android-ndk-r27b-linux.zip
+              if [ $i -lt 3 ]; then
+                sleep 10
+              fi
+            fi
+          done
+          
+          # Verify file exists before unzipping
+          if [ -f "android-ndk-r27b-linux.zip" ]; then
+            echo "Extracting NDK..."
+            unzip -q android-ndk-r27b-linux.zip
+            rm -f android-ndk-r27b-linux.zip
+            echo "NDK extraction completed"
+          else
+            echo "ERROR: NDK download failed after 3 attempts"
+            exit 1
+          fi
+        else
+          echo "NDK found in cache, skipping download"
+        fi
+      timeout-minutes: 60
 
     - name: Set Buildozer config
       run: |
@@ -63,23 +113,30 @@ jobs:
     - name: Accept Android licenses
       run: |
         export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
+        export ANDROID_NDK_ROOT=$HOME/.buildozer/android/platform/android-sdk/ndk/27.0.12077973
         yes | buildozer android update || true
       env:
         JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
     - name: Build APK (with retry)
       run: |
+        export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
+        export ANDROID_NDK_ROOT=$HOME/.buildozer/android/platform/android-sdk/ndk/27.0.12077973
+        
         for attempt in {1..3}; do
           echo "Build attempt $attempt/3..."
           if buildozer android debug; then
             echo "Build succeeded!"
             exit 0
-          fi
-          if [ $attempt -lt 3 ]; then
-            echo "Build failed, retrying in 30 seconds..."
-            sleep 30
+          else
+            echo "Build failed on attempt $attempt"
+            if [ $attempt -lt 3 ]; then
+              echo "Retrying in 30 seconds..."
+              sleep 30
+            fi
           fi
         done
+        echo "Build failed after 3 attempts"
         exit 1
       timeout-minutes: 120
       continue-on-error: false
