@@ -186,3 +186,4 @@ jobs:
         name: buildozer-logs
         path: .buildozer/android/platform/build-*/build/outputs/logs/
         retention-days: 3
+
