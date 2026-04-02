@@ -21,6 +21,8 @@ jobs:
         rm -rf ~/.gradle/caches/build-cache-* || true
         rm -rf ~/.buildozer/android/platform/android-sdk/ndk || true
         rm -rf ~/.buildozer/android/platform/android-ndk* || true
+        rm -rf ~/.buildozer/android/platform/android-sdk/tools || true
+        rm -rf ~/.buildozer/android/platform/android-sdk/cmdline-tools || true
     
     - name: Cache Buildozer
       uses: actions/cache@v3
@@ -57,7 +59,7 @@ jobs:
           cmake libffi-dev libssl-dev ca-certificates wget
         pip install --upgrade pip setuptools wheel
         pip install --upgrade buildozer cython
-        
+    
     - name: Setup Android SDK
       run: |
         export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
@@ -74,24 +76,25 @@ jobs:
         mkdir -p cmdline-tools/latest
         mv cmdline-tools/* cmdline-tools/latest/ 2>/dev/null || true
         
-        # Verify sdkmanager exists
+        # Verify sdkmanager exists at source
         if [ ! -f "cmdline-tools/latest/bin/sdkmanager" ]; then
           echo "ERROR: sdkmanager not found after extraction"
           exit 1
         fi
-        echo "✓ sdkmanager found at cmdline-tools/latest/bin/sdkmanager"
+        
+        # Create symlink for backward compatibility with buildozer
+        ln -s cmdline-tools/latest $ANDROID_SDK_ROOT/tools
         
         # Create licenses directory and accept licenses
         mkdir -p $ANDROID_SDK_ROOT/licenses
         echo -e "\n8933bad161af4d15e21e9cd5bde69f1d4faf61b\n" > $ANDROID_SDK_ROOT/licenses/android-sdk-license
         echo -e "\n504667f4c0de7973335447fc81eff3b0dfa5d37\n" > $ANDROID_SDK_ROOT/licenses/android-sdk-preview-license
         
-        # Install SDK packages using the complete sdkmanager installation
+        # Install SDK packages
         echo "Installing SDK packages..."
-        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platforms;android-34" 2>&1 | tail -10 || true
-        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "build-tools;35.0.0" 2>&1 | tail -10 || true
-        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" 2>&1 | tail -10 || true
-        echo "✓ SDK packages installed"
+        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platforms;android-34" 2>&1 | tail -5 || true
+        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "build-tools;35.0.0" 2>&1 | tail -5 || true
+        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" 2>&1 | tail -5 || true
       timeout-minutes: 60
       env:
         JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
@@ -126,13 +129,13 @@ jobs:
             echo "Extracting NDK..."
             unzip -q android-ndk-r27b-linux.zip
             rm -f android-ndk-r27b-linux.zip
-            echo "✓ NDK extraction completed"
+            echo "NDK extraction completed"
           else
             echo "ERROR: NDK download failed after 3 attempts"
             exit 1
           fi
         else
-          echo "✓ NDK found in cache, skipping download"
+          echo "NDK found in cache, skipping download"
         fi
       timeout-minutes: 60
     
@@ -164,17 +167,17 @@ jobs:
         for attempt in {1..3}; do
           echo "Build attempt $attempt/3..."
           if buildozer android debug; then
-            echo "✓ Build succeeded!"
+            echo "Build succeeded!"
             exit 0
           else
-            echo "✗ Build failed on attempt $attempt"
+            echo "Build failed on attempt $attempt"
             if [ $attempt -lt 3 ]; then
               echo "Retrying in 30 seconds..."
               sleep 30
             fi
           fi
         done
-        echo "✗ Build failed after 3 attempts"
+        echo "Build failed after 3 attempts"
         exit 1
       timeout-minutes: 120
       continue-on-error: false
