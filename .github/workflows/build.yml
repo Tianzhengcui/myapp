@@ -189,7 +189,8 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: apk
-        path: bin/*.apk
+        path: |
+          **/*.apk
         retention-days: 5
 
     - name: Upload build logs on failure
