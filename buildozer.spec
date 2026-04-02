@@ -9,12 +9,11 @@ requirements=python==3.10.11,kivy==2.1.0,pyjnius==1.5.1
 orientation = portrait
 fullscreen = 0
 
-android.api = 31
-android.miniapi = 21
-android.ndk = 25b
+android.api = 34
+android.minapi = 21
+android.ndk = 27b  # Updated from 25b
 
 [buildozer]
-# Log level (0 = error, 1 = info, 2 = debug)
 log_level = 2
 warn_on_root = 1
 
@@ -22,8 +21,7 @@ warn_on_root = 1
 android.permissions = INTERNET
 
 [app:android]
-# Use specific, known-working versions
-android.api = 31
+android.api = 34
 android.minapi = 21
-android.ndk = 25b
+android.ndk = 27b  # Updated from 25b
 android.accept_sdk_license = True
