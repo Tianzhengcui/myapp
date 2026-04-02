@@ -74,6 +74,16 @@ jobs:
         mkdir -p cmdline-tools/latest
         mv cmdline-tools/* cmdline-tools/latest/ 2>/dev/null || true
         
+        # Verify sdkmanager exists
+        if [ ! -f "cmdline-tools/latest/bin/sdkmanager" ]; then
+          echo "ERROR: sdkmanager not found after extraction"
+          exit 1
+        fi
+        
+        # Create a symlink for backward compatibility with buildozer
+        mkdir -p tools/bin
+        ln -sf ../cmdline-tools/latest/bin/sdkmanager tools/bin/sdkmanager 2>/dev/null || true
+        
         # Create licenses directory and accept licenses
         mkdir -p $ANDROID_SDK_ROOT/licenses
         echo -e "\n8933bad161af4d15e21e9cd5bde69f1d4faf61b\n" > $ANDROID_SDK_ROOT/licenses/android-sdk-license
@@ -186,3 +196,4 @@ jobs:
         name: buildozer-logs
         path: .buildozer/android/platform/build-*/build/outputs/logs/
         retention-days: 3
+
